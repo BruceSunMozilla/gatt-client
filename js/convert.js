@@ -32,6 +32,19 @@ var convert = function Convert(type, value)
         return translate('bluetooth_adapter_not_discovering');
       }
       break;
+    case 'BluetoothAdapterLeScanning':
+      switch (value) {
+        case 'starting':
+          return translate('bluetooth_adapter_lescan_starting');
+        case 'started':
+          return translate('bluetooth_adapter_lescan_started');
+        case 'stopping':
+          return translate('bluetooth_adapter_lescan_stopping');
+        case 'stopped':
+          return translate('bluetooth_adapter_lescan_stopped');
+        default:
+          return null;
+      }
     case 'BluetoothDeviceType':
       switch (value) {
         case 'unknown':

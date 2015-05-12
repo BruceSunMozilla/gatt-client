@@ -107,6 +107,16 @@ function BluetoothAdapterElement(container, adapter)
   this._discoveryContainer.disable = true;
   this._selfContainer.appendChild(this._discoveryContainer);
   
+  // Bluetooth Low Energy Scan
+  this._leScanContainer = document.createElement('div');
+  this._checkboxLeScan = document.createElement('input');
+  this._checkboxLeScan.type = 'checkbox';
+  this._labelLeScan = document.createTextNode(this._convert('BluetoothAdapterLeScanning', 'stopped'));
+  this._leScanContainer.appendChild(this._checkboxLeScan);
+  this._leScanContainer.appendChild(this._labelLeScan);
+  this._leScanContainer.disable = true;
+  this._selfContainer.appendChild(this._leScanContainer);
+  
   // Bluetooth Found Device List
   this._foundDeviceListContainer = document.createElement('div');
   var labelFoundDeviceList = document.createTextNode(this._translate('bluetooth_found_device_list') + ": ");
@@ -118,6 +128,7 @@ function BluetoothAdapterElement(container, adapter)
   hideElement(this._foundDeviceListContainer);
   
   this._devices = [];
+  this._leScanHandle = null;
 
   this._initEvents();
   
@@ -130,6 +141,7 @@ BluetoothAdapterElement.prototype = {
     this._checkboxEnable.addEventListener('click', this._onEnableClick.bind(this));
     this._checkboxDiscoverable.addEventListener('click', this._onDiscoverableClick.bind(this));
     this._checkboxDiscovery.addEventListener('click', this._onDiscoveryClick.bind(this));
+    this._checkboxLeScan.addEventListener('click', this._onLeScanClick.bind(this));
     
     this._adapter.addObserver('adapterstatechanged', this, this._onAdapterStateChanged);
     this._adapter.addObserver('adapteraddresschanged', this, this._onAdapterAddressChanged);
@@ -137,6 +149,7 @@ BluetoothAdapterElement.prototype = {
     this._adapter.addObserver('adapterdiscoverablechanged', this, this._onAdapterDiscoverableChanged);
     this._adapter.addObserver('adapterdiscoveringchanged', this, this._onAdapterDiscoveringChanged);
     this._adapter.addObserver('generaldevicefound', this, this._onGeneralDeviceFound);
+    this._adapter.addObserver('ledevicefound', this, this._onLeDeviceFound);
   },
   
   _onEnableClick: function OnEnableClick()
@@ -144,6 +157,7 @@ BluetoothAdapterElement.prototype = {
     this._checkboxEnable.disable = true;
     this._discoverableContainer.disable = true;
     this._discoveryContainer.disable = true;
+    this._leScanContainer.disable = true;
     if (this._checkboxEnable.checked) {
       this._adapter.enable().then(function onResolve() {
         showElement(this._foundDeviceListContainer);
@@ -198,6 +212,38 @@ BluetoothAdapterElement.prototype = {
     }
   },
   
+  _onLeScanClick: function OnLeScanClick()
+  {
+    this._checkboxLeScan.disable = true;
+    if (this._checkboxLeScan.checked) {
+      for (var i in this._devices) {
+        this._devices[i].cleanup();
+      }
+      this._devices = [];
+      this._leScanHandle = null;
+      
+      this._labelLeScan.textContent = this._convert('BluetoothAdapterLeScanning', 'starting');
+      this._adapter.startLeScan([]).then(function onResolve(handle) {
+        this._leScanHandle = handle;
+        this._labelLeScan.textContent = this._convert('BluetoothAdapterLeScanning', 'started');
+        this._checkboxLeScan.disable = true;
+      }.bind(this), function onReject(reason) {
+        this._labelLeScan.textContent = this._convert('BluetoothAdapterLeScanning', 'stopped');
+        this._checkboxLeScan.disable = false;
+      }.bind(this));
+    } else {
+      this._labelLeScan.textContent = this._convert('BluetoothAdapterLeScanning', 'stopping');
+      this._adapter.stopLeScan(this._leScanHandle).then(function onResolve() {
+        this._leScanHandle = null;
+        this._labelLeScan.textContent = this._convert('BluetoothAdapterLeScanning', 'stopped');
+        this._checkboxLeScan.disable = true;
+      }.bind(this), function onReject(reason) {
+        this._labelLeScan.textContent = this._convert('BluetoothAdapterLeScanning', 'started');
+        this._checkboxLeScan.disable = false;
+      }.bind(this));
+    }
+  },
+  
   _onAdapterStateChanged: function OnAdapterStateChanged(adapter)
   {
     if (adapter.state == 'disabled' || adapter.state == 'enabled') {
@@ -209,6 +255,7 @@ BluetoothAdapterElement.prototype = {
     if (adapter.state == 'enabled') {
       this._discoverableContainer.disable = false;
       this._discoveryContainer.disable = false;
+      this._leScanContainer.disable = false;
     }
   },
   
@@ -241,6 +288,11 @@ BluetoothAdapterElement.prototype = {
     this._devices.push(new BluetoothDeviceElement(this._listFoundDeviceList, this._adapter, device));
   },
   
+  _onLeDeviceFound: function OnLeDeviceFound(device, rssi, record)
+  {
+    this._devices.push(new BluetoothDeviceElement(this._listFoundDeviceList, this._adapter, device));
+  },
+  
   cleanup: function Cleanup()
   {
     this._adapter.removeObserver('adapterstatechanged', this, this._onAdapterStateChanged);
@@ -249,6 +301,7 @@ BluetoothAdapterElement.prototype = {
     this._adapter.removeObserver('adapterdiscoverablechanged', this, this._onAdapterDiscoverableChanged);
     this._adapter.removeObserver('adapterdiscoveringchanged', this, this._onAdapterDiscoveringChanged);
     this._adapter.removeObserver('generaldevicefound', this, this._onGeneralDeviceFound);
+    this._adapter.removeObserver('ledevicefound', this, this._onLeDeviceFound);
     
     this._container.removeChild(this._selfContainer);
   }

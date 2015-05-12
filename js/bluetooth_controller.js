@@ -153,10 +153,13 @@ BluetoothAdapterController.prototype = {
     this.notifyObserver('generaldevicefound', device);
   },
   
-  _onGattDeviceFound: function nGattDeviceFound(evt)
+  _onGattDeviceFound: function OnGattDeviceFound(evt)
   {
-    console.log("adapter gatt device with address: [" + evt.device.address + "] is found");
-    this.notifyObserver('gattdevicefound', evt.device);
+    var device = new BluetoothDeviceController(evt.device);
+    var rssi = evt.rssi;
+    var record = evt.scanRecord;
+    console.log("adapter low energy device with address: [" + evt.device.address + "] is found");
+    this.notifyObserver('ledevicefound', device, rssi, record);
   },
   
   enable: function Enable()
@@ -237,24 +240,29 @@ BluetoothAdapterController.prototype = {
     })
   },
   
-  startGattScan: function StartGattScan(uuids)
+  startLeScan: function StartLeScan(uuids)
   {
+    if (!uuids) {
+      uuids = [];
+    }
     return this._adapter.startLeScan(uuids).then(function onResolve(value) {
       console.log("adapter startLeScan: resolved with value: [" + value + "]");
       value.addEventListener('devicefound', this._onGattDeviceFound.bind(this));
       return Promise.resolve(value);
     }.bind(this), function onReject(reason) {
       console.log("adapter startLeScan: rejected with this reason: [" + reason + "]");
+      return Promise.reject(reason);
     }.bind(this));
   },
   
-  stopGattScan: function StopGattScan(handle)
+  stopLeScan: function StopLeScan(handle)
   {
     return this._adapter.stopLeScan(handle).then(function onResolve(value) {
       console.log("adapter stopLeScan: resolved with value: [" + value + "]");
       return Promise.resolve(value);
     }.bind(this), function onReject(reason) {
       console.log("adapter stopLeScan: rejected with this reason: [" + reason + "]");
+      return Promise.reject(reason);
     }.bind(this));
   }
 }

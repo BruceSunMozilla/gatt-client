@@ -13,7 +13,7 @@
     "name": "FirefoxOS Bluetooth Team",
     "url": "https://wiki.mozilla.org/B2G/Bluetooth#Team_Members"
   },
-  "type": "privileged",
+  "type": "certified",
   "permissions": {
     "bluetooth":{}
   },
