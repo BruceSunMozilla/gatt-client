@@ -161,6 +161,10 @@ BluetoothAdapterElement.prototype = {
     if (this._checkboxEnable.checked) {
       this._adapter.enable().then(function onResolve() {
         showElement(this._foundDeviceListContainer);
+        this._checkboxEnable.disable = false;
+        this._discoverableContainer.disable = false;
+        this._discoveryContainer.disable = false;
+        this._leScanContainer.disable = false;
       }.bind(this), function onReject(reason) {
         this._checkboxEnable.disable = false;
       }.bind(this));
@@ -172,7 +176,10 @@ BluetoothAdapterElement.prototype = {
       this._devices = [];
       
       this._adapter.disable().then(function onResolve() {
-        // no-op
+        this._checkboxEnable.disable = false;
+        this._checkboxDiscoverable.checked = false;
+        this._checkboxDiscovery.checked = false;
+        this._checkboxLeScan.checked = false;
       }.bind(this), function onReject(reason) {
         this._checkboxEnable.disable = false;
       }.bind(this));
