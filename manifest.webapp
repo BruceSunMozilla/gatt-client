@@ -24,7 +24,13 @@
       "description": "Una plantilla con la mínima estructura",
       "permissions": {
       }
+    },
+    "en-US": {
+      "name": "Priviledge empty application",
+      "description": "A template with minimum structure",
+      "permission": {
+      }
     }
   },
-  "default_locale": "en"
+  "default_locale": "en-US"
 }
